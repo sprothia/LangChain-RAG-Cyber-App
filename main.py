@@ -19,7 +19,7 @@ from langchain_community.document_loaders import PyPDFLoader
 VECTOR_DB_DIR = "chroma_db"
 
 
-openai_api_key = 'sk-proj-cF99o5monCgN5LMgdfHZT3BlbkFJJcqcGTky8pcslY2Omhtl'
+openai_api_key = ''
 
 async def step_one_load_files():
     all_data = []
