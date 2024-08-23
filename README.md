@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a Retrieval-Augmented Generation (RAG) application built using Python's Langchain library and Streamlit for a web-based user interface. The application processes PDF documents, vectorizes their content, and allows users to input text queries to generate summaries, extract topics, and find related YouTube videos. The application is optimized to persist vectorized data, reducing the need to reprocess documents on subsequent runs, thus enhancing performance.
+This project is a Retrieval-Augmented Generation (RAG) application built using Python's Langchain library and Streamlit for a web-based user interface. The application processes the NIST-800 PDF documents, vectorizes their content in a vector database, and allows users to input text queries to generate summaries, extract topics, and find related YouTube videos. The application is optimized to persist vectorized data, reducing the need to reprocess documents on subsequent runs, thus enhancing performance.
 
 ## Features
 
@@ -27,5 +27,6 @@ To run this project, you need to have Python installed on your machine. Follow t
    ```bash
    pip install -r requirements.txt
 
-
-3. **Insert your OpenAI API Key**:
+3. **Run App**:
+   ```bash
+   streamlit run main.py
