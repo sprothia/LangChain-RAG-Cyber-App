@@ -1,6 +1,3 @@
-from langchain_community.document_loaders import UnstructuredPDFLoader
-from langchain_community.document_loaders import OnlinePDFLoader
-from langchain_community.embeddings import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
@@ -19,7 +16,7 @@ from langchain_community.document_loaders import PyPDFLoader
 VECTOR_DB_DIR = "chroma_db"
 
 
-openai_api_key = ''
+openai_api_key = 'sk-proj-cF99o5monCgN5LMgdfHZT3BlbkFJJcqcGTky8pcslY2Omhtl'
 
 async def step_one_load_files():
     all_data = []
@@ -49,11 +46,11 @@ async def step_one_load_files():
 
     return all_data
 
-async def step_two_chunks_embeddings_vectordb(data):
+async def step_two_chunks_embeddings_vectordb(data, openai_key):
 
     if os.path.exists(VECTOR_DB_DIR):
         st.write("...")
-        vector_db = Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=OpenAIEmbeddings(model='text-embedding-ada-002', openai_api_key=openai_api_key))
+        vector_db = Chroma(persist_directory=VECTOR_DB_DIR, embedding_function=OpenAIEmbeddings(model='text-embedding-ada-002', api_key=openai_key))
     else:
         st.write("Vectorizing documents and saving the vector database...")
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=7500, chunk_overlap=100)
@@ -62,7 +59,7 @@ async def step_two_chunks_embeddings_vectordb(data):
         model_name = 'text-embedding-ada-002'
         embeddings = OpenAIEmbeddings(
             model=model_name,
-            openai_api_key=openai_api_key
+            api_key=openai_key
         )
 
         vector_db = Chroma.from_documents(
@@ -75,9 +72,9 @@ async def step_two_chunks_embeddings_vectordb(data):
     return vector_db
 
 
-async def step_three_model(vector_database):
+async def step_three_model(vector_database, openai_key):
     
-    os.environ["OPENAI_API_KEY"] = openai_api_key
+    os.environ["OPENAI_API_KEY"] = openai_key
 
     from langchain_openai import ChatOpenAI
     llm = ChatOpenAI(model="gpt-3.5-turbo-0125")  
@@ -141,28 +138,30 @@ def summarize_and_extract_topic(text, chain, topic_chain):
       "links": youtube_links
   }
 
-async def main():
+async def main(openai_key):
     if not os.path.exists(VECTOR_DB_DIR):
         all_data = await step_one_load_files()
-        vector_db = await step_two_chunks_embeddings_vectordb(all_data)
+        vector_db = await step_two_chunks_embeddings_vectordb(all_data, openai_key)
     else:
-        vector_db = await step_two_chunks_embeddings_vectordb(None)
+        vector_db = await step_two_chunks_embeddings_vectordb(None, openai_key)
 
 
-    retriever, prompt, llm = await step_three_model(vector_db)
+    retriever, prompt, llm = await step_three_model(vector_db, openai_key)
     chain, topic_chain = await step_four_chains(retriever, prompt, llm)
     # text = "Your input text here"
     # result = summarize_and_extract_topic(text, chain, topic_chain)
     # print(result)
     return chain, topic_chain
 
-st.title("Cybersecurity Document Chat")
-input_text = st.text_area("Enter your NIST document query: ")
+st.title("NIST-800 AI Advisor")
+input_text = st.text_area("Enter your NIST question: ")
+open_key = st.text_input("Enter your OpenAI API key:")
 
 if st.button("Run"):
-    if input_text:
-        chain, topic_chain = asyncio.run(main())
-        result = summarize_and_extract_topic(input_text, chain, topic_chain)
+    if input_text and open_key:
+        with st.spinner("Processing request"):
+            chain, topic_chain = asyncio.run(main(open_key))
+            result = summarize_and_extract_topic(input_text, chain, topic_chain)
 
         # Display the result
         st.subheader("Summary")
@@ -175,8 +174,11 @@ if st.button("Run"):
         st.write(result['links'])
 
     else:
-        st.warning("Please enter some text to proceed.")
+        st.warning("Please enter some text or apikey to proceed.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    if(open_key):
+        asyncio.run(main(openai_key=open_key))
+    else:
+        print("Add openaikey and query")
 
